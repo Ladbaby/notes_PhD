@@ -231,7 +231,22 @@ for (const [tag, members] of tagIndex) {
   }
 }
 
-log(`图：${graphNodes.length} 节点 / ${graphLinks.length} 边`);
+// 度数：这个节点连了多少条边。
+// 用 sqrt 压缩后再映射到 0~1，避免少数巨节点独占整个尺寸区间。
+const degreeOf = new Map();
+for (const l of graphLinks) {
+  degreeOf.set(l.s, (degreeOf.get(l.s) || 0) + 1);
+  degreeOf.set(l.t, (degreeOf.get(l.t) || 0) + 1);
+}
+const maxDegree = Math.max(1, ...degreeOf.values());
+for (const n of graphNodes) {
+  const d = degreeOf.get(n.id) || 0;
+  // dg: 归一化后的度数（0~1），前端拿它做面积映射
+  n.dg = Number(Math.sqrt(d / maxDegree).toFixed(4));
+  n.dd = d;
+}
+
+log(`图：${graphNodes.length} 节点 / ${graphLinks.length} 边（最大度数 ${maxDegree}）`);
 
 const stats = {
   total: uniqueNotes.length,
@@ -311,6 +326,8 @@ fs.mkdirSync(path.join(OUT, "data"), { recursive: true });
       rating: n.r,
       hasBody: n.a,
       w: n.w,
+      dg: n.dg,
+      dd: n.dd,
       color: dom.hex,
       dk: dom.key,
       x: Math.cos(ang) * rad,
@@ -359,6 +376,8 @@ fs.mkdirSync(path.join(OUT, "data"), { recursive: true });
         r: n.rating,
         a: n.hasBody,
         w: n.w,
+        dg: n.dg,
+        dd: n.dd,
         d: n.color,
         dk: n.dk,
         x: Number(n.x.toFixed(4)),

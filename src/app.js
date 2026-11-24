@@ -866,7 +866,7 @@ function initGraphPage() {
         }
       }
 
-      const r = (0.95 + Math.sqrt(n.w || 1) * 0.62) * scale;
+      const r = nodeRadius(n) * scale;
 
       ctx.globalAlpha = alpha * 0.14;
       ctx.fillStyle = n.d;
@@ -947,7 +947,7 @@ function initGraphPage() {
 
         // 引线：从节点指向标签，避免标签脱离节点。
         // 注意：这里不能复用上面节点循环里的 r（那是循环内 const，已出作用域）。
-        const nodeR = (0.95 + Math.sqrt(n.w || 1) * 0.62) * (sparse ? 1.9 : 1) * (isCenter ? 1.7 : 1.2);
+        const nodeR = nodeRadius(n) * (sparse ? 1.9 : 1) * (isCenter ? 1.7 : 1.2);
         ctx.globalAlpha = 0.25;
         ctx.strokeStyle = isLight() ? "rgba(120, 130, 150, 1)" : "rgba(150, 170, 220, 1)";
         ctx.lineWidth = 1;
@@ -993,6 +993,24 @@ function initGraphPage() {
     });
   }
 
+/**
+ * 节点半径。
+ *
+ * 视觉上要看的是"面积"差多少，不是"半径"差多少——面积按平方增长，
+ * 半径直接乘 2 面积就是 4 倍。所以让面积正比于度数，半径就该正比于
+ * sqrt(度数)；构建期存的 dg 已经是 sqrt 归一化值，这里线性用即可。
+ *
+ * 没有 dg 的旧数据退回到按正文长度估，保证不出现半径为 0 的点。
+ */
+function nodeRadius(n) {
+  if (typeof n.dg === "number") {
+    // 0 → 1.1px（孤立节点也要看得见），1 → 6px（度数最高的枢纽）
+    // 上限压到 6px：再大中心区域就会互相重叠糊成一片
+    return 1.1 + n.dg * 4.9;
+  }
+  return 0.95 + Math.sqrt(n.w || 1) * 0.62;
+}
+
   function hitTest(mx, my) {
     let best = -1;
     let bestD = Infinity;
@@ -1000,7 +1018,7 @@ function initGraphPage() {
       if (n.hidden) continue;
       const p = toScreen(n);
       const d = Math.hypot(p.x - mx, p.y - my);
-      const r = 0.95 + Math.sqrt(n.w || 1) * 0.62;
+      const r = nodeRadius(n);
       const thr = Math.max(r + 8, 12);
       if (d < thr && d < bestD) {
         bestD = d;
@@ -1024,6 +1042,8 @@ function initGraphPage() {
         r: n.r,
         hasBody: n.a,
         w: n.w,
+        dg: typeof n.dg === "number" ? n.dg : null,
+        dd: n.dd,
         d: n.d || DOMAIN_HEX[n.dk] || DOMAIN_HEX.other,
         dk: n.dk,
         nx: n.x,
