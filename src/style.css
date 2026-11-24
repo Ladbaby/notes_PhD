@@ -266,7 +266,7 @@ img {
   padding: calc(var(--nav-h) + 34px) 0 72px;
 }
 
-/* 静态绘制的图谱，只做整体缓慢漂移（合成层，不改 pixels） */
+/* 静态绘制的图谱：画一次，之后完全不动 */
 #hero-canvas {
   position: fixed;
   inset: 0;
@@ -275,12 +275,12 @@ img {
   display: block;
   opacity: 0;
   z-index: 1;
-  animation: canvas-in 2s var(--ease) forwards, drift 46s ease-in-out infinite;
+  animation: canvas-in 2s var(--ease) forwards;
   /* 装饰层，不需要高分辨率；限制在一个合成层内避免重复提升 */
   transform: translateZ(0);
 }
-/* 动态层：只画闪烁节点与穿梭光点，叠在静态图谱之上。
-   共享同一套漂移动画，保证两层永远同步（否则会看到重影）。 */
+/* 动态层：只画沿边穿梭的光点，叠在静态图谱之上。
+   两层必须用同一个坐标基准，否则光点会脱离连线。 */
 #hero-spark {
   position: fixed;
   inset: 0;
@@ -290,7 +290,7 @@ img {
   z-index: 1;
   pointer-events: none;
   opacity: 0;
-  animation: canvas-in 2.4s var(--ease) 0.3s forwards, drift 46s ease-in-out infinite;
+  animation: canvas-in 2.4s var(--ease) 0.3s forwards;
   transform: translateZ(0);
 }
 @media (prefers-reduced-motion: reduce) {
@@ -299,25 +299,13 @@ img {
   }
 }
 #hero-canvas.ready {
-  animation: canvas-in 2s var(--ease) forwards, drift 46s ease-in-out infinite;
+  animation: canvas-in 2s var(--ease) forwards;
 }
 @keyframes canvas-in {
   to {
     opacity: 1;
   }
 }
-/* 极缓慢的整体位移与缩放，视觉上像在呼吸，但只在合成器上跑 */
-@keyframes drift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  33% {
-    transform: translate3d(-10px, 7px, 0) scale(1.018);
-  }
-  66% {
-    transform: translate3d(8px, -6px, 0) scale(1.008);
-  }
 }
 
 .hero-inner {
@@ -325,7 +313,7 @@ img {
   z-index: 4;
   width: 100%;
   max-width: 1120px;
-  margin: 0 auto;
+  margin-left: 10px;
   padding: 0 40px;
 }
 /* 与下方 .block 的 40px 内边距对齐，标题左缘在一条竖线上 */

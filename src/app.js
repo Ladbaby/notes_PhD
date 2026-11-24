@@ -416,22 +416,6 @@ function startSparkles(nodes, links) {
   let W = 0;
   let H = 0;
 
-  // 挑一批节点做呼吸：优先取度数高的，它们在视觉中心更显眼
-  const degree = new Map();
-  for (const l of links) {
-    degree.set(l.s, (degree.get(l.s) || 0) + 1);
-    degree.set(l.t, (degree.get(l.t) || 0) + 1);
-  }
-  const ranked = nodes
-    .map((n, i) => ({ n, i, d: degree.get(i) || 0 }))
-    .sort((a, b) => b.d - a.d);
-  const BLINK = Math.min(120, ranked.length);
-  const blinkers = ranked.slice(0, BLINK).map(({ n, i }) => ({
-    i,
-    phase: Math.random() * Math.PI * 2,
-    speed: 0.5 + Math.random() * 1.1,
-    amp: 0.35 + Math.random() * 0.65,
-  }));
 
   // 光点：沿着真实存在的边奔跑，从一个节点滑到另一个节点
   const SPARKS = Math.min(26, links.length);
@@ -475,25 +459,6 @@ function startSparkles(nodes, links) {
     if (!visible || document.hidden) return;
 
     ctx.clearRect(0, 0, W, H);
-
-    // 1) 节点呼吸：亮度在 0.15~1 之间缓慢起伏
-    for (const b of blinkers) {
-      const n = nodes[b.i];
-      if (!n) continue;
-      const v = 0.5 + 0.5 * Math.sin(ts * 0.00042 * b.speed + b.phase);
-      const a = 0.14 + v * b.amp;
-      const rr = n.r * (2.6 + v * 1.5);
-      ctx.globalAlpha = a * 0.34;
-      ctx.fillStyle = n.color;
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, rr, 0, Math.PI * 2);
-      ctx.fill();
-      // 芯部提亮，闪烁才有点亮的感觉
-      ctx.globalAlpha = a;
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, n.r * (1.05 + v * 0.5), 0, Math.PI * 2);
-      ctx.fill();
-    }
 
     // 2) 光点沿边穿梭，带一小段拖尾
     for (const sp of sparks) {
