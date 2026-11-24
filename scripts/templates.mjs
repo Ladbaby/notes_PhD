@@ -372,12 +372,12 @@ function renderHome({ stats, domainCounts: domainCountsIn, years, recent, noteUr
     </p>
 
     <h1 class="hero-title">
-      <span class="line reveal" style="--d:1">读过 <em class="num" data-count="${total}">${total}</em> 篇论文，</span>
-      <span class="line reveal" style="--d:2">它们之间有 <em class="num" data-count="${stats.links}">${stats.links}</em> 条连线。</span>
+      <span class="line reveal" style="--d:1"><em class="num" data-count="${total}">${total}</em> 篇论文，</span>
+      <span class="line reveal" style="--d:2"><em class="num" data-count="${stats.links}">${stats.links}</em> 条连线。</span>
     </h1>
 
     <p class="hero-sub reveal" style="--d:3">
-      一个博士生的阅读轨迹：生成模型、时间序列、临床机器学习。
+      一个博士生的阅读轨迹：生成模型、时间序列、医疗。
       每篇都记了贡献、方法与自己的判断。
     </p>
 
