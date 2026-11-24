@@ -1,11 +1,22 @@
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
-import { applySanitize, stripObsidianComments } from "./sanitize.mjs";
-import { renderBlocks, addHeadingIds, extractToc, normalizeTag, isVenueTag } from "./render.mjs";
-import { layout, domainOf, escapeHtml as esc } from "./templates.mjs";
 import { buildAssets } from "./assets.mjs";
 import { solve, normalize } from "../src/force-core.mjs";
+import { renderBlocks, addHeadingIds, extractToc, normalizeTag, isVenueTag } from "./render.mjs";
+import { layout, domainOf, escapeHtml as esc } from "./templates.mjs";
+
+// ---------------------------------------------------------------- 工具
+/**
+ * 移除 Obsidian 的 %% %% 注释（Zotero 导入痕迹等），可跨行。
+ * 原文里对措辞的清理已经一次性回写到 notes/ 源文件，构建期不再需要净化规则。
+ */
+function stripObsidianComments(text) {
+  let out = text.replace(/%%[\s\S]*?%%/g, "");
+  // 兜底：删掉落单的 %% 标记
+  out = out.split("\n").filter((l) => !/^\s*%%\s*$/.test(l)).join("\n");
+  return out;
+}
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 // 部署到 GitHub Pages 子路径时（如 /notes_PhD/）所有绝对资源需要带前缀
@@ -38,9 +49,7 @@ for (const abs of rawFiles) {
 }
 
 // ---------------------------------------------------------------- 内容清理
-
-const sanitizeLog = applySanitize(fileMap);
-log(`内容清理：${sanitizeLog.length} 处变更`);
+// 净化规则已应用于源文件，构建期不再做替换。
 
 // ---------------------------------------------------------------- 图片索引
 
@@ -641,7 +650,7 @@ console.log(
       venues: stats.venues,
       tags: stats.tags,
       graphLinks: stats.links,
-      sanitizeChanges: sanitizeLog.length,
+      strippedComments: true,
     },
     null,
     2

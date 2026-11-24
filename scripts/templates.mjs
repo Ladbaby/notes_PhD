@@ -362,17 +362,8 @@ function renderHome({ stats, domainCounts: domainCountsIn, years, recent, noteUr
   return `
 <!-- ============================ hero ============================ -->
 <section class="hero" id="hero">
-  <!-- 氛围层：只用 CSS 变换驱动，不消耗 CPU 光栅化 -->
-  <div class="nebula" aria-hidden="true">
-    <span class="neb a"></span>
-    <span class="neb b"></span>
-    <span class="neb c"></span>
-    <span class="neb d"></span>
-    <span class="neb e"></span>
-    <span class="neb f"></span>
-  </div>
   <canvas id="hero-canvas" aria-hidden="true"></canvas>
-  <div class="hero-glow" aria-hidden="true"></div>
+  <canvas id="hero-spark" aria-hidden="true"></canvas>
 
   <div class="hero-inner">
     <p class="hero-kicker reveal" style="--d:0">
@@ -405,9 +396,6 @@ function renderHome({ stats, domainCounts: domainCountsIn, years, recent, noteUr
     </dl>
   </div>
 
-  <a class="scroll-cue" href="#s-domains" aria-label="继续向下">
-    <span class="cue-line"></span>
-  </a>
 </section>
 
 <!-- ============================ 领域 ============================ -->

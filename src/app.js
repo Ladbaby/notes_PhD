@@ -399,6 +399,184 @@ function initNotesIndex() {
  * 之前每帧 redraw 620 个节点和几千条线，而视觉上只是极微弱的呼吸，
  * 代价与收益完全不匹配——这是"什么都不干 GPU 占用却很高"的直接原因。
  */
+/**
+ * 首页图谱的动态层：节点呼吸式明灭 + 光点沿边穿梭。
+ *
+ * 分成两张 canvas 的原因：静态的节点与连线只画一次，永不重绘；
+ * 这张只画几十个会变的小东西。若混在一起，每帧都要重画几千条线，
+ * 而肉眼根本看不出那些线在动——纯浪费。
+ */
+function startSparkles(nodes, links) {
+  const cv = $('#hero-spark');
+  if (!cv || !nodes.length) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const ctx = cv.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  let W = 0;
+  let H = 0;
+
+  // 挑一批节点做呼吸：优先取度数高的，它们在视觉中心更显眼
+  const degree = new Map();
+  for (const l of links) {
+    degree.set(l.s, (degree.get(l.s) || 0) + 1);
+    degree.set(l.t, (degree.get(l.t) || 0) + 1);
+  }
+  const ranked = nodes
+    .map((n, i) => ({ n, i, d: degree.get(i) || 0 }))
+    .sort((a, b) => b.d - a.d);
+  const BLINK = Math.min(120, ranked.length);
+  const blinkers = ranked.slice(0, BLINK).map(({ n, i }) => ({
+    i,
+    phase: Math.random() * Math.PI * 2,
+    speed: 0.5 + Math.random() * 1.1,
+    amp: 0.35 + Math.random() * 0.65,
+  }));
+
+  // 光点：沿着真实存在的边奔跑，从一个节点滑到另一个节点
+  const SPARKS = Math.min(26, links.length);
+  const sparks = [];
+  const pickSpark = () => {
+    const l = links[(Math.random() * links.length) | 0];
+    const s = nodes[l.s];
+    const t = nodes[l.t];
+    const len = Math.hypot(t.x - s.x, t.y - s.y);
+    return { s, t, u: 0, speed: (60 + Math.random() * 90) / Math.max(len, 1), hue: Math.random() };
+  };
+  for (let i = 0; i < SPARKS; i++) {
+    const sp = pickSpark();
+    sp.u = Math.random(); // 错开出发时间，避免同时起步
+    sparks.push(sp);
+  }
+
+  function resize() {
+    const rect = cv.getBoundingClientRect();
+    W = Math.round(rect.width);
+    H = Math.round(rect.height);
+    if (!W || !H) return false;
+    cv.width = Math.round(W * dpr);
+    cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return true;
+  }
+
+  const easeInOut = (x) => 0.5 - 0.5 * Math.cos(Math.PI * x);
+
+  let last = 0;
+  let raf = 0;
+  let running = false;
+  let visible = true;
+
+  function frame(ts) {
+    raf = requestAnimationFrame(frame);
+    // 限到 ~30fps：这类缓慢氛围动效不需要 60，省一半光栅化
+    if (ts - last < 33) return;
+    last = ts;
+    if (!visible || document.hidden) return;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // 1) 节点呼吸：亮度在 0.15~1 之间缓慢起伏
+    for (const b of blinkers) {
+      const n = nodes[b.i];
+      if (!n) continue;
+      const v = 0.5 + 0.5 * Math.sin(ts * 0.00042 * b.speed + b.phase);
+      const a = 0.14 + v * b.amp;
+      const rr = n.r * (2.6 + v * 1.5);
+      ctx.globalAlpha = a * 0.34;
+      ctx.fillStyle = n.color;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, rr, 0, Math.PI * 2);
+      ctx.fill();
+      // 芯部提亮，闪烁才有点亮的感觉
+      ctx.globalAlpha = a;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r * (1.05 + v * 0.5), 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 2) 光点沿边穿梭，带一小段拖尾
+    for (const sp of sparks) {
+      sp.u += sp.speed * 0.033;
+      if (sp.u >= 1) {
+        Object.assign(sp, pickSpark(), { u: 0 });
+        continue;
+      }
+      const x = sp.s.x + (sp.t.x - sp.s.x) * sp.u;
+      const y = sp.s.y + (sp.t.y - sp.s.y) * sp.u;
+      const fade = Math.sin(Math.PI * sp.u); // 两端淡入淡出，不会突然出现/消失
+      const hue = sp.hue < 0.5 ? '150, 240, 210' : '190, 200, 255';
+
+      // 短而亮的拖尾：太长会和静态的边混在一起，看不出是&quot;在跑&quot;
+      const trail = 0.055;
+      const px = sp.s.x + (sp.t.x - sp.s.x) * Math.max(0, sp.u - trail);
+      const py = sp.s.y + (sp.t.y - sp.s.y) * Math.max(0, sp.u - trail);
+      const g = ctx.createLinearGradient(px, py, x, y);
+      g.addColorStop(0, `rgba(${hue}, 0)`);
+      g.addColorStop(1, `rgba(${hue}, ${(0.95 * fade).toFixed(3)})`);
+      ctx.strokeStyle = g;
+      ctx.lineWidth = 2.4;
+      ctx.lineCap = `round`;
+      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+
+      // 光头：三层同心圆做柔光，小尺寸下也能一眼看到
+      ctx.fillStyle = `rgba(${hue}, 1)`;
+      ctx.globalAlpha = 0.16 * fade;
+      ctx.beginPath();
+      ctx.arc(x, y, 9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.3 * fade;
+      ctx.beginPath();
+      ctx.arc(x, y, 4.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = fade;
+      ctx.beginPath();
+      ctx.arc(x, y, 2.1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.globalAlpha = 1;
+  }
+
+  function start() {
+    if (running || !resize()) return;
+    running = true;
+    raf = requestAnimationFrame(frame);
+  }
+  function stop() {
+    running = false;
+    cancelAnimationFrame(raf);
+    ctx.clearRect(0, 0, W, H);
+  }
+
+  start();
+
+  // 滚出首屏或切到别的标签页就停掉，不后台空转
+  const io = new IntersectionObserver(([e]) => {
+    visible = e.isIntersecting;
+  }, { threshold: 0 });
+  io.observe(cv);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stop();
+    else if (visible) start();
+  });
+
+  let rt = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(rt);
+    rt = setTimeout(() => {
+      if (resize()) {
+        last = 0;
+      }
+    }, 220);
+  });
+}
+
 async function initHero() {
   const canvas = $("#hero-canvas");
   if (!canvas) return;
@@ -499,7 +677,11 @@ async function initHero() {
     canvas.classList.add("ready");
   }
 
+// ---- 动态层：闪烁节点 + 沿边穿梭的光点
+  // 静态图谱已经画好在另一张 canvas 上；这里只画会变的部分，
+  // 图层少、元素少，30fps 足够，静止/隐藏时立刻停。
   paint();
+  startSparkles(nodes, links);
 
   // 只在窗口尺寸真正变化时重绘（防抖），不进入任何逐帧循环
   let rt = null;
@@ -508,6 +690,7 @@ async function initHero() {
     rt = setTimeout(paint, 220);
   });
 
+  // 星云是 fixed 定位，滚出 hero 后要淡出，否则会落在后面章节的文字底下
   // 标签页不可见时暂停全部动画，避免后台白烧 GPU
   document.addEventListener("visibilitychange", () => {
     const paused = document.hidden;
@@ -615,10 +798,22 @@ function initGraphPage() {
   let dirty = true;
   const hiddenDomains = new Set();
 
-  const toScreen = (n) => ({
-    x: (n.nx - 0.5) * Math.min(W, H) * 1.02 * view.s + W / 2 + view.x,
-    y: (n.ny - 0.5) * Math.min(W, H) * 1.02 * view.s + H / 2 + view.y,
-  });
+  // 入场动画进度 0→1。p 用 easeOutCubic，收尾自然停住。
+  let introP = 0;
+  const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+  const posOf = (n) => {
+    if (introP >= 1) return { nx: n.nx, ny: n.ny };
+    const e = easeOut(introP);
+    return { nx: n.sx + (n.nx - n.sx) * e, ny: n.sy + (n.ny - n.sy) * e };
+  };
+
+  const toScreen = (n) => {
+    const p = posOf(n);
+    return {
+      x: (p.nx - 0.5) * Math.min(W, H) * 1.02 * view.s + W / 2 + view.x,
+      y: (p.ny - 0.5) * Math.min(W, H) * 1.02 * view.s + H / 2 + view.y,
+    };
+  };
 
   function resize() {
     const r = canvas.getBoundingClientRect();
@@ -710,8 +905,91 @@ function initGraphPage() {
         ctx.stroke();
       }
     }
+
+    // ---- 标签：悬停时直接标在图上。
+    // 只高亮边而不说"另一头是谁"，等于让人沿着细线去猜，没有意义。
+    if (focusing) {
+      const labelTargets = [hoverIdx, ...nbrs];
+      // 邻接太多时只标注最近的若干个，避免文字糊成一片
+      const MAX_LABELS = 14;
+
+      ctx.textBaseline = "middle";
+      ctx.font = "500 11px ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif";
+
+      // 已占用的标签矩形，用于简单避让：重叠就往下挪
+      const placed = [];
+      const overlaps = (box) =>
+        placed.some((b) => box.x < b.x + b.w && box.x + box.w > b.x && box.y < b.y + b.h && box.y + box.h > b.y);
+
+      let drawn = 0;
+      for (const idx of labelTargets) {
+        if (drawn >= MAX_LABELS) break;
+        const n = nodes[idx];
+        if (!n || n.hidden) continue;
+        const p = toScreen(n);
+        if (p.x < -80 || p.y < -30 || p.x > W + 80 || p.y > H + 30) continue;
+
+        const isCenter = idx === hoverIdx;
+        const text = isCenter ? n.t : trimLabel(n.t, 22);
+
+        // 文字底色，保证在密集边线上仍可读
+        const tw = ctx.measureText(text).width;
+        const padX = 5;
+        const bx = p.x + 10;
+        const by = p.y - 9;
+
+        // 避让：与已放置的标签重叠时，向下逐级挪 19px，最多试 6 次
+        let fy = by;
+        for (let attempt = 0; attempt < 6; attempt++) {
+          const box = { x: bx - padX, y: fy, w: tw + padX * 2, h: 18 };
+          if (!overlaps(box)) break;
+          fy += 19;
+        }
+        placed.push({ x: bx - padX, y: fy, w: tw + padX * 2, h: 18 });
+
+        ctx.globalAlpha = isCenter ? 0.92 : 0.78;
+        ctx.fillStyle = "rgba(6, 8, 14, 0.82)";
+        roundRect(ctx, bx - padX, fy, tw + padX * 2, 18, 4);
+        ctx.fill();
+
+        ctx.globalAlpha = isCenter ? 1 : 0.9;
+        ctx.fillStyle = isCenter ? "#f2f5ff" : "rgba(200, 212, 240, 0.95)";
+        ctx.fillText(text, bx, fy + 9);
+
+        // 引线：从节点指向标签，避免标签脱离节点。
+        // 注意：这里不能复用上面节点循环里的 r（那是循环内 const，已出作用域）。
+        const nodeR = (0.95 + Math.sqrt(n.w || 1) * 0.62) * (sparse ? 1.9 : 1) * (isCenter ? 1.7 : 1.2);
+        ctx.globalAlpha = 0.25;
+        ctx.strokeStyle = "rgba(150,170,220,1)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(p.x + nodeR + 2, p.y);
+        ctx.lineTo(bx - padX, p.y);
+        ctx.stroke();
+
+        drawn++;
+      }
+    }
+
     ctx.globalAlpha = 1;
     dirty = false;
+  }
+
+  /** 过长标题截断（按字符，中文标题为主） */
+  function trimLabel(t, max) {
+    const s = String(t || "");
+    return s.length > max ? s.slice(0, max - 1) + "…" : s;
+  }
+
+  /** 圆角矩形路径 */
+  function roundRect(c, x, y, w, h, r) {
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
   }
 
   // 按需渲染：只有状态变了才请求一帧。
@@ -762,6 +1040,11 @@ function initGraphPage() {
         nx: n.x,
         ny: n.ny,
         hidden: false,
+        // 入场：从中心附近的一个随机偏移出发，向最终位置收敛。
+        // 与 Obsidian 打开图谱时"点先散开再归位"的观感一致。
+        sx: 0.5 + (Math.random() - 0.5) * 0.06,
+        sy: 0.5 + (Math.random() - 0.5) * 0.06,
+        anim: 0,
       }));
 
       // 构建期已把端点写成节点下标；兼容字符串 id 的旧格式
@@ -806,7 +1089,19 @@ function initGraphPage() {
       buildLegend();
       applyFilter();
       canvas.classList.add("ready");
-      requestDraw();
+
+      // 入场动画：约 900ms 从中心散开归位，结束后彻底停止请求帧
+      const t0 = performance.now();
+      const DUR = 900;
+      const stepIntro = (now) => {
+        const t = Math.min(1, (now - t0) / DUR);
+        introP = t;
+        dirty = true;
+        draw();
+        if (t < 1) requestAnimationFrame(stepIntro);
+        else introP = 1;
+      };
+      requestAnimationFrame(stepIntro);
     });
 
   // ---- 图例
