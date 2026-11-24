@@ -559,7 +559,16 @@ async function initHero() {
 
   const ctx = canvas.getContext("2d");
 
-  const nodes = rawNodes.map((n) => ({ nx: n.x, ny: n.ny, w: n.w, color: n.d, x: 0, y: 0, r: 0 }));
+  const nodes = rawNodes.map((n) => ({
+    nx: n.x,
+    ny: n.ny,
+    w: n.w,
+    dg: typeof n.dg === "number" ? n.dg : null,
+    color: n.d,
+    x: 0,
+    y: 0,
+    r: 0,
+  }));
   const links = rawLinks
     .map((l) => {
       const s = typeof l.s === "number" ? l.s : -1;
@@ -594,7 +603,9 @@ async function initHero() {
     for (const n of nodes) {
       n.x = cx + (n.nx - 0.5) * span;
       n.y = cy + (n.ny - 0.5) * span;
-      n.r = 0.6 + Math.sqrt(n.w || 1) * 0.6;
+      // 面积正比于度数 → 半径正比于 sqrt(度数)，构建期已存好归一化值。
+      // 首页是背景，上限比图谱页收一点，避免大点压过标题。
+      n.r = typeof n.dg === "number" ? 0.7 + n.dg * 3.7 : 0.6 + Math.sqrt(n.w || 1) * 0.6;
     }
 
     // 边
@@ -626,10 +637,12 @@ async function initHero() {
       // 深色模式节点本身够亮；浅色模式靠加粗一点维持存在感
       const nodeScale = isLight() ? 1.15 : 1;
 
-      ctx.globalAlpha = 0.16;
+      ctx.globalAlpha = 0.13;
       ctx.beginPath();
       for (const n of group) {
-        const hr = n.r * 3.4 * nodeScale;
+        // 光晕不再等比放大：半径越大，倍率越小，避免大点撑成大色块
+        const haloMul = 3.4 / (1 + n.r * 0.22);
+        const hr = n.r * haloMul * nodeScale;
         ctx.moveTo(n.x + hr, n.y);
         ctx.arc(n.x, n.y, hr, 0, Math.PI * 2);
       }

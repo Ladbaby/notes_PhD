@@ -487,6 +487,18 @@ const heroNodes = (() => {
 const heroIds = new Set(heroNodes.map((n) => n.id));
 const heroLinks = graphLinks.filter((l) => heroIds.has(l.s) && heroIds.has(l.t));
 
+// 首页节点的度数按"这张图里实际画出来的边"重新统计
+const heroDegreeOf = new Map();
+for (const l of heroLinks) {
+  heroDegreeOf.set(l.s, (heroDegreeOf.get(l.s) || 0) + 1);
+  heroDegreeOf.set(l.t, (heroDegreeOf.get(l.t) || 0) + 1);
+}
+const heroMaxDegree = Math.max(1, ...heroDegreeOf.values());
+const heroDeg = new Map(
+  heroNodes.map((n) => [n.id, Number(Math.sqrt((heroDegreeOf.get(n.id) || 0) / heroMaxDegree).toFixed(4))])
+);
+log(`hero 图：${heroNodes.length} 节点 / ${heroLinks.length} 边（最大度数 ${heroMaxDegree}）`);
+
 // 在 Node 里把布局跑到收敛：浏览器端不再出现"粒子乱飞"的求解过程
 {
   const idx = new Map();
@@ -540,6 +552,7 @@ const heroLinks = graphLinks.filter((l) => heroIds.has(l.s) && heroIds.has(l.t))
         i: n.id,
         y: n.year,
         w: n.w,
+        dg: heroDeg.get(n.id),
         d: n.color,
         x: Number(n.x.toFixed(4)),
         ny: Number(n.y.toFixed(4)),
