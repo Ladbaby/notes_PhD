@@ -49,6 +49,150 @@
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* ------------------------------------------------------- 浅色主题
+ *
+ * 跟随系统偏好；用户手动切换后由 <html data-theme> 覆盖。
+ * 浅色不是把深色反过来——深色靠发光，浅色靠墨色深浅。
+ */
+
+/* 语义化的中间变量：让硬编码颜色有地方落脚 */
+:root {
+  --surface-glass: rgba(6, 7, 13, 0.94);
+  --surface-glass-soft: rgba(6, 7, 13, 0.9);
+  --hairline: rgba(255, 255, 255, 0.06);
+  --hairline-strong: rgba(255, 255, 255, 0.14);
+  --wash: rgba(255, 255, 255, 0.025);
+  --wash-hover: rgba(255, 255, 255, 0.05);
+  --edge-hi: rgba(255, 255, 255, 0.26);
+  --ink-invert: #05060b;
+  --code-bg: #080a11;
+  --year-grid: rgba(255, 255, 255, 0.08);
+  --year-last: rgba(255, 255, 255, 0.18);
+  --accent-wash: rgba(94, 234, 212, 0.1);
+  --accent-wash-soft: rgba(94, 234, 212, 0.07);
+  --accent-wash-faint: rgba(94, 234, 212, 0.06);
+  --scroll-thumb: #2a3348;
+  --scroll-thumb-hover: #33405a;
+  --scroll-track: #232b3d;
+  --code-ink: #e6c07b;
+  --link-wikilink-hover: #c4b5fd;
+}
+
+:root[data-theme=],
+:root {
+  color-scheme: dark;
+}
+
+/* 浅色变量：系统偏好浅色 或 用户手动选浅色，都用这一份 */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #faf9f7;
+    --bg-raised: #ffffff;
+    --bg-panel: #f4f3f0;
+    --bg-hover: #eeede9;
+    --bg-active: #e6e5e0;
+
+    --border: #e2e0da;
+    --border-soft: #ecebe6;
+    --border-strong: #cfccc4;
+
+    --text: #26282e;
+    --text-dim: #5f6470;
+    --text-faint: #8b8f9a;
+    --text-bright: #101216;
+
+    --accent: #0d9488;
+    --accent-2: #7c3aed;
+    --accent-3: #2563eb;
+    --accent-warm: #b45309;
+    --accent-rose: #e11d48;
+
+    --d-gen: #7c3aed;
+    --d-ts: #0d9488;
+    --d-llm: #2563eb;
+    --d-clin: #e11d48;
+    --d-graph: #b45309;
+    --d-learn: #059669;
+    --d-other: #6b7280;
+
+    --shadow: 0 1px 2px rgba(16, 18, 22, 0.06), 0 8px 24px rgba(16, 18, 22, 0.07);
+    --shadow-lg: 0 24px 64px rgba(16, 18, 22, 0.14);
+
+    --surface-glass: rgba(250, 249, 247, 0.94);
+    --surface-glass-soft: rgba(250, 249, 247, 0.9);
+    --hairline: rgba(16, 18, 22, 0.07);
+    --hairline-strong: rgba(16, 18, 22, 0.16);
+    --wash: rgba(16, 18, 22, 0.028);
+    --wash-hover: rgba(16, 18, 22, 0.05);
+    --edge-hi: rgba(16, 18, 22, 0.2);
+    --ink-invert: #ffffff;
+    --code-bg: #f4f3f0;
+    --year-grid: rgba(16, 18, 22, 0.09);
+    --year-last: rgba(16, 18, 22, 0.2);
+    --accent-wash: rgba(13, 148, 136, 0.09);
+    --accent-wash-soft: rgba(13, 148, 136, 0.07);
+    --accent-wash-faint: rgba(13, 148, 136, 0.06);
+    --scroll-thumb: #cfccc4;
+    --scroll-thumb-hover: #b8b4aa;
+    --scroll-track: #e6e5e0;
+  --code-ink: #9a5b1a;
+  --link-wikilink-hover: #6d28d9;
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #faf9f7;
+  --bg-raised: #ffffff;
+  --bg-panel: #f4f3f0;
+  --bg-hover: #eeede9;
+  --bg-active: #e6e5e0;
+
+  --border: #e2e0da;
+  --border-soft: #ecebe6;
+  --border-strong: #cfccc4;
+
+  --text: #26282e;
+  --text-dim: #5f6470;
+  --text-faint: #8b8f9a;
+  --text-bright: #101216;
+
+  --accent: #0d9488;
+  --accent-2: #7c3aed;
+  --accent-3: #2563eb;
+  --accent-warm: #b45309;
+  --accent-rose: #e11d48;
+
+  --d-gen: #7c3aed;
+  --d-ts: #0d9488;
+  --d-llm: #2563eb;
+  --d-clin: #e11d48;
+  --d-graph: #b45309;
+  --d-learn: #059669;
+  --d-other: #6b7280;
+
+  --shadow: 0 1px 2px rgba(16, 18, 22, 0.06), 0 8px 24px rgba(16, 18, 22, 0.07);
+  --shadow-lg: 0 24px 64px rgba(16, 18, 22, 0.14);
+
+  --surface-glass: rgba(250, 249, 247, 0.94);
+  --surface-glass-soft: rgba(250, 249, 247, 0.9);
+  --hairline: rgba(16, 18, 22, 0.07);
+  --hairline-strong: rgba(16, 18, 22, 0.16);
+  --wash: rgba(16, 18, 22, 0.028);
+  --wash-hover: rgba(16, 18, 22, 0.05);
+  --edge-hi: rgba(16, 18, 22, 0.2);
+  --ink-invert: #ffffff;
+  --code-bg: #f4f3f0;
+  --year-grid: rgba(16, 18, 22, 0.09);
+  --year-last: rgba(16, 18, 22, 0.2);
+  --accent-wash: rgba(13, 148, 136, 0.09);
+  --accent-wash-soft: rgba(13, 148, 136, 0.07);
+  --accent-wash-faint: rgba(13, 148, 136, 0.06);
+  --scroll-thumb: #cfccc4;
+  --scroll-thumb-hover: #b8b4aa;
+  --scroll-track: #e6e5e0;
+}
+
 /* ------------------------------------------------------- reset */
 *,
 *::before,
@@ -92,14 +236,14 @@ img {
 }
 
 ::selection {
-  background: rgba(94, 234, 212, 0.24);
+  background: color-mix(in oklab, var(--accent) 24%, transparent);
   color: var(--text-bright);
 }
 
 /* scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #2a3348 transparent;
+  scrollbar-color: var(--scroll-thumb) transparent;
 }
 ::-webkit-scrollbar {
   width: 10px;
@@ -109,12 +253,12 @@ img {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #232b3d;
+  background: var(--scroll-track);
   border-radius: 99px;
   border: 3px solid var(--bg);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #33405a;
+  background: var(--scroll-thumb-hover);
 }
 
 /* ------------------------------------------------------- nav */
@@ -129,13 +273,13 @@ img {
   z-index: 100;
   /* 不用 backdrop-filter：导航正下方是持续动画的星云，
      模糊每帧都要重新采样，是稳定的 GPU 开销源。改用高不透明度底色。 */
-  background: rgba(6, 7, 13, 0.94);
+  background: var(--surface-glass);
   border-bottom: 1px solid transparent;
   transition: border-color 0.3s, background 0.3s;
 }
 .nav.scrolled {
   border-bottom-color: var(--border);
-  background: rgba(6, 7, 13, 0.9);
+  background: var(--surface-glass-soft);
 }
 
 .nav-brand {
@@ -217,6 +361,43 @@ img {
   color: var(--text-faint);
 }
 
+.nav-theme {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-faint);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.nav-theme:hover {
+  color: var(--text-bright);
+  border-color: var(--border-strong);
+  background: var(--bg-hover);
+}
+.nav-theme .tt-icon {
+  display: none;
+  line-height: 0;
+}
+/* 图标跟随实际生效的主题：
+   - 手动 data-theme 优先
+   - 否则看系统偏好
+   用两个独立媒体查询分开写，避免"手动深色 + 系统浅色"时两个图标同时出现。 */
+html[data-theme="dark"] .nav-theme .tt-icon[data-icon="sun"],
+html[data-theme="light"] .nav-theme .tt-icon[data-icon="moon"] {
+  display: block;
+}
+@media (prefers-color-scheme: light) {
+  html:not([data-theme]) .nav-theme .tt-icon[data-icon="moon"] { display: block; }
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) .nav-theme .tt-icon[data-icon="sun"] { display: block; }
+}
 .nav-toggle {
   display: none;
   background: none;
@@ -306,7 +487,6 @@ img {
     opacity: 1;
   }
 }
-}
 
 .hero-inner {
   position: relative;
@@ -390,7 +570,7 @@ img {
 .hero-title .num {
   font-style: normal;
   font-variant-numeric: tabular-nums;
-  background: linear-gradient(100deg, #5eead4 0%, #7dd3fc 42%, #a78bfa 100%);
+  background: linear-gradient(100deg, var(--accent) 0%, var(--accent-3) 42%, var(--accent-2) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -426,8 +606,8 @@ img {
   will-change: transform;
 }
 .btn-primary {
-  background: linear-gradient(100deg, #5eead4, #67e8f9 55%, #a78bfa);
-  color: #05060b;
+  background: linear-gradient(100deg, var(--accent), var(--accent-3) 55%, var(--accent-2));
+  color: var(--ink-invert);
   font-weight: 600;
   box-shadow: 0 6px 26px rgba(94, 234, 212, 0.22);
 }
@@ -444,11 +624,11 @@ img {
 .btn-ghost {
   border: 1px solid var(--border-strong);
   color: var(--text-dim);
-  background: rgba(255, 255, 255, 0.025);
+  background: var(--wash);
 }
 .btn-ghost:hover {
   color: var(--text-bright);
-  border-color: rgba(255, 255, 255, 0.26);
+  border-color: var(--edge-hi);
   transform: translateY(-2px);
 }
 
@@ -536,7 +716,7 @@ img {
   align-items: center;
   gap: 16px;
   padding: 11px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--hairline);
   font-size: 13px;
 }
 .dom-name {
@@ -548,7 +728,7 @@ img {
 .dom-track {
   height: 5px;
   border-radius: 99px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--wash-hover);
   overflow: hidden;
 }
 .dom-fill {
@@ -593,7 +773,7 @@ img {
   overflow: visible;
 }
 .yr-axis {
-  stroke: rgba(255, 255, 255, 0.08);
+  stroke: var(--year-grid);
   stroke-width: 1;
 }
 .yr-line {
@@ -619,13 +799,13 @@ img {
   }
 }
 .yr-peak {
-  fill: #5eead4;
-  filter: drop-shadow(0 0 7px rgba(94, 234, 212, 0.85));
+  fill: var(--accent);
+  filter: drop-shadow(0 0 7px color-mix(in oklab, var(--accent) 85%, transparent));
   opacity: 0;
   animation: fade-in 0.6s var(--ease) 1.35s forwards;
 }
 .yr-peak-label {
-  fill: #5eead4;
+  fill: var(--accent);
   font-size: 13px;
   font-weight: 600;
   opacity: 0;
@@ -859,7 +1039,7 @@ img {
   color: var(--text);
 }
 .tree-note.current {
-  background: rgba(94, 234, 212, 0.1);
+  background: var(--accent-wash);
   color: var(--accent);
   font-weight: 500;
 }
@@ -939,7 +1119,7 @@ a.chip:hover {
 .note-tags a:hover {
   border-color: var(--accent);
   color: var(--accent);
-  background: rgba(94, 234, 212, 0.07);
+  background: var(--accent-wash-soft);
 }
 
 /* reading progress */
@@ -952,7 +1132,7 @@ a.chip:hover {
   background: linear-gradient(to right, var(--accent), var(--accent-2));
   z-index: 101;
   transition: width 0.08s linear;
-  box-shadow: 0 0 10px rgba(94, 234, 212, 0.5);
+  box-shadow: 0 0 10px color-mix(in oklab, var(--accent) 50%, transparent);
 }
 
 /* ------------------------------------------------------- prose (obsidian-like) */
@@ -1054,14 +1234,14 @@ a.chip:hover {
   padding: 0.15em 0.4em;
   border-radius: 4px;
   background: var(--bg-active);
-  color: #e6c07b;
+  color: var(--code-ink);
   border: 1px solid var(--border-soft);
 }
 .prose pre {
   margin: 1.3em 0;
   padding: 16px 18px;
   border-radius: var(--radius);
-  background: #080a11;
+  background: var(--code-bg);
   border: 1px solid var(--border);
   overflow-x: auto;
   font-size: 13px;
@@ -1077,7 +1257,7 @@ a.chip:hover {
 
 .prose a {
   color: var(--accent-3);
-  border-bottom: 1px solid rgba(96, 165, 250, 0.28);
+  border-bottom: 1px solid color-mix(in oklab, var(--accent-3) 28%, transparent);
   transition: color 0.15s, border-color 0.15s;
 }
 .prose a:hover {
@@ -1086,16 +1266,16 @@ a.chip:hover {
 }
 .prose a.wikilink {
   color: var(--accent-2);
-  border-bottom-color: rgba(167, 139, 250, 0.3);
+  border-bottom-color: color-mix(in oklab, var(--accent-2) 30%, transparent);
 }
 .prose a.wikilink:hover {
-  color: #c4b5fd;
-  border-bottom-color: #c4b5fd;
+  color: var(--link-wikilink-hover);
+  border-bottom-color: var(--link-wikilink-hover);
 }
 
 .prose mark.ob-highlight,
 .prose mark {
-  background: rgba(251, 191, 36, 0.22);
+  background: color-mix(in oklab, var(--accent-warm) 22%, transparent);
   color: inherit;
   padding: 0.08em 0.2em;
   border-radius: 2px;
@@ -1146,7 +1326,7 @@ a.chip:hover {
   border: 1px solid var(--border);
   border-left: 3px solid var(--callout-accent, var(--accent-3));
   border-radius: var(--radius);
-  background: linear-gradient(170deg, rgba(255, 255, 255, 0.022), transparent 60%);
+  background: linear-gradient(170deg, var(--wash), transparent 60%);
   overflow: hidden;
 }
 .callout-head {
@@ -1212,7 +1392,7 @@ a.chip:hover {
 }
 .callout-quote {
   --callout-accent: var(--callout-accent, #ffd400);
-  background: rgba(255, 255, 255, 0.018);
+  background: var(--wash);
 }
 .callout-quote .callout-body {
   font-size: 14px;
@@ -1467,7 +1647,7 @@ a.chip:hover {
 
 .graph-panel {
   position: absolute;
-  background: rgba(11, 13, 22, 0.86);
+  background: var(--surface-glass-soft);
   backdrop-filter: blur(14px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1576,7 +1756,7 @@ a.chip:hover {
   pointer-events: none;
   max-width: 300px;
   padding: 10px 13px;
-  background: rgba(8, 10, 17, 0.96);
+  background: var(--surface-glass);
   backdrop-filter: blur(10px);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
@@ -1616,7 +1796,6 @@ a.chip:hover {
 }
 
 .graph-hint {
-  opacity: 0.6;
   position: absolute;
   bottom: 22px;
   left: 50%;
@@ -1675,7 +1854,7 @@ a.chip:hover {
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: var(--nav-h);
-  background: rgba(6, 7, 13, 0.92);
+  background: var(--surface-glass-soft);
   backdrop-filter: blur(12px);
   z-index: 40;
 }
@@ -1778,7 +1957,7 @@ a.chip:hover {
   font-size: 10px;
   padding: 1px 5px;
   border-radius: 3px;
-  background: rgba(139, 149, 173, 0.12);
+  background: color-mix(in oklab, var(--d-other) 12%, transparent);
   color: var(--text-faint);
   border: 1px solid var(--border);
   vertical-align: 1px;
@@ -1821,7 +2000,7 @@ a.chip:hover {
   align-items: flex-start;
   justify-content: center;
   padding: 12vh 20px 20px;
-  background: rgba(4, 5, 10, 0.78);
+  background: var(--surface-glass-soft);
   backdrop-filter: blur(8px);
 }
 .search-overlay.open {
@@ -1869,6 +2048,13 @@ a.chip:hover {
   border: 1px solid var(--border);
   border-radius: 4px;
   color: var(--text-faint);
+}
+.sr-hl {
+  background: var(--accent-wash);
+  color: var(--accent);
+  padding: 0 1px;
+  border-radius: 2px;
+  font-style: normal;
 }
 .search-results {
   max-height: 56vh;
@@ -2040,7 +2226,7 @@ a.chip:hover {
   border-color: var(--accent);
   transform: translateY(-2px);
   color: var(--accent);
-  background: rgba(94, 234, 212, 0.06);
+  background: var(--accent-wash-faint);
 }
 .tag-cloud-item .tc-hash {
   color: var(--text-faint);
@@ -2082,7 +2268,7 @@ a.chip:hover {
 .dead-link {
   color: var(--text-faint);
   text-decoration: none;
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.18);
+  border-bottom: 1px dashed var(--year-last);
   cursor: help;
 }
 

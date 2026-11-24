@@ -91,6 +91,8 @@ const ICON = {
   minus: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg>`,
   target: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="2.5"/></svg>`,
   arrow: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>`,
+  sun: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.2v2.4M12 19.4v2.4M2.2 12h2.4M19.4 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></svg>`,
+  moon: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.4A8.6 8.6 0 1 1 9.6 3.5a6.9 6.9 0 0 0 10.9 10.9Z"/></svg>`,
   menu: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`,
 };
 
@@ -164,7 +166,7 @@ export function layout(o) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(fullTitle)}</title>
 <meta name="description" content="${esc(description)}">
-<meta name="color-scheme" content="dark">
+<meta name="color-scheme" content="dark light">
 <meta property="og:title" content="${esc(fullTitle)}">
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:type" content="website">
@@ -174,8 +176,16 @@ export function layout(o) {
 <link rel="stylesheet" href="${url("/assets/style.css")}">
 <link rel="stylesheet" href="${url("/assets/katex.min.css")}">
 <script>
-  // 同步内联，避免暗色闪白
-  document.documentElement.dataset.page = ${JSON.stringify(page)};
+  // 同步内联：首次绘制前定好主题，避免闪白/闪黑
+  (function () {
+    try {
+      var saved = localStorage.getItem("theme");
+      if (saved === "light" || saved === "dark") {
+        document.documentElement.dataset.theme = saved;
+      }
+    } catch (e) {}
+    document.documentElement.dataset.page = ${JSON.stringify(page)};
+  })();
 </script>
 </head>
 <body>
@@ -235,6 +245,10 @@ function renderNav(page) {
   <div class="nav-spacer"></div>
   <button class="nav-search" id="search-open" aria-label="搜索">
     ${ICON.search}<span>搜索笔记</span><kbd>⌘K</kbd>
+  </button>
+  <button class="nav-theme" id="theme-toggle" aria-label="切换深浅色" title="切换深浅色">
+    <span class="tt-icon" data-icon="moon">${ICON.moon}</span>
+    <span class="tt-icon" data-icon="sun">${ICON.sun}</span>
   </button>
   <button class="nav-toggle" id="nav-toggle" aria-label="目录">${ICON.menu}</button>
 </nav>`;

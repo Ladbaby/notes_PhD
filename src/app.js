@@ -167,7 +167,8 @@ function hl(text, q) {
   if (!q) return safe;
   const i = safe.toLowerCase().indexOf(q.toLowerCase());
   if (i === -1) return safe;
-  return safe.slice(0, i) + "<mark style='background:rgba(94,234,212,.22);color:#5eead4;padding:0 1px;border-radius:2px'>" + safe.slice(i, i + q.length) + "</mark>" + safe.slice(i + q.length);
+  // 用 class 而不是内联颜色，浅色模式下才能跟着变
+  return safe.slice(0, i) + "<mark class='sr-hl'>" + safe.slice(i, i + q.length) + "</mark>" + safe.slice(i + q.length);
 }
 
 // ------------------------------------------------------------ 笔记页
@@ -598,8 +599,10 @@ async function initHero() {
 
     // 边
     ctx.lineWidth = 1;
-    ctx.strokeStyle = "rgba(130,155,210,1)";
-    ctx.globalAlpha = 0.055;
+    // 浅色下连线用更深的蓝灰，否则在白底上完全看不见
+    const edgeBase = isLight() ? "rgba(70, 92, 130, 1)" : "rgba(130, 155, 210, 1)";
+    ctx.strokeStyle = edgeBase;
+    ctx.globalAlpha = isLight() ? 0.05 : 0.055;
     ctx.beginPath();
     for (let k = 0; k < links.length; k += 2) {
       const l = links[k];
@@ -620,20 +623,24 @@ async function initHero() {
 
     for (const [color, group] of byColor) {
       ctx.fillStyle = color;
+      // 深色模式节点本身够亮；浅色模式靠加粗一点维持存在感
+      const nodeScale = isLight() ? 1.15 : 1;
 
       ctx.globalAlpha = 0.16;
       ctx.beginPath();
       for (const n of group) {
-        ctx.moveTo(n.x + n.r * 3.4, n.y);
-        ctx.arc(n.x, n.y, n.r * 3.4, 0, Math.PI * 2);
+        const hr = n.r * 3.4 * nodeScale;
+        ctx.moveTo(n.x + hr, n.y);
+        ctx.arc(n.x, n.y, hr, 0, Math.PI * 2);
       }
       ctx.fill();
 
       ctx.globalAlpha = 0.85;
       ctx.beginPath();
       for (const n of group) {
-        ctx.moveTo(n.x + n.r, n.y);
-        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        const cr = n.r * nodeScale;
+        ctx.moveTo(n.x + cr, n.y);
+        ctx.arc(n.x, n.y, cr, 0, Math.PI * 2);
       }
       ctx.fill();
     }
@@ -653,6 +660,12 @@ async function initHero() {
   window.addEventListener("resize", () => {
     clearTimeout(rt);
     rt = setTimeout(paint, 220);
+  });
+
+  // 主题切换后连线与节点颜色都变了，清掉尺寸缓存逼它重画
+  window.addEventListener("themechange", () => {
+    lastKey = "";
+    paint();
   });
 
   // 星云是 fixed 定位，滚出 hero 后要淡出，否则会落在后面章节的文字底下
@@ -818,7 +831,12 @@ function initGraphPage() {
         alpha = near ? 0.55 : 0.008;
       }
       ctx.globalAlpha = alpha;
-      ctx.strokeStyle = focusing && (l.s === hoverIdx || l.t === hoverIdx) ? "rgba(94,234,212,1)" : "rgba(140,160,205,1)";
+      ctx.strokeStyle =
+        focusing && (l.s === hoverIdx || l.t === hoverIdx)
+          ? themeColor("--accent", "#5eead4")
+          : isLight()
+            ? "rgba(96, 112, 140, 1)"
+            : "rgba(140, 160, 205, 1)";
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(ps.x, ps.y);
@@ -863,7 +881,7 @@ function initGraphPage() {
 
       if (n.idx === hoverIdx) {
         ctx.globalAlpha = 0.9;
-        ctx.strokeStyle = "rgba(255,255,255,0.85)";
+        ctx.strokeStyle = isLight() ? "rgba(20, 22, 28, 0.72)" : "rgba(255, 255, 255, 0.85)";
         ctx.lineWidth = 1.1;
         ctx.beginPath();
         ctx.arc(p.x, p.y, r + 3.5, 0, Math.PI * 2);
@@ -913,19 +931,25 @@ function initGraphPage() {
         placed.push({ x: bx - padX, y: fy, w: tw + padX * 2, h: 18 });
 
         ctx.globalAlpha = isCenter ? 0.92 : 0.78;
-        ctx.fillStyle = "rgba(6, 8, 14, 0.82)";
+        ctx.fillStyle = isLight() ? "rgba(255, 255, 255, 0.94)" : "rgba(6, 8, 14, 0.82)";
         roundRect(ctx, bx - padX, fy, tw + padX * 2, 18, 4);
         ctx.fill();
 
         ctx.globalAlpha = isCenter ? 1 : 0.9;
-        ctx.fillStyle = isCenter ? "#f2f5ff" : "rgba(200, 212, 240, 0.95)";
+        ctx.fillStyle = isLight()
+          ? isCenter
+            ? "#101216"
+            : "rgba(38, 40, 46, 0.95)"
+          : isCenter
+            ? "#f2f5ff"
+            : "rgba(200, 212, 240, 0.95)";
         ctx.fillText(text, bx, fy + 9);
 
         // 引线：从节点指向标签，避免标签脱离节点。
         // 注意：这里不能复用上面节点循环里的 r（那是循环内 const，已出作用域）。
         const nodeR = (0.95 + Math.sqrt(n.w || 1) * 0.62) * (sparse ? 1.9 : 1) * (isCenter ? 1.7 : 1.2);
         ctx.globalAlpha = 0.25;
-        ctx.strokeStyle = "rgba(150,170,220,1)";
+        ctx.strokeStyle = isLight() ? "rgba(120, 130, 150, 1)" : "rgba(150, 170, 220, 1)";
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(p.x + nodeR + 2, p.y);
@@ -1294,11 +1318,104 @@ function initGraphPage() {
     clearTimeout(rt);
     rt = setTimeout(resize, 120);
   });
+
+  // 主题切换：颜色取自 CSS 变量，重画一遍即可
+  window.addEventListener("themechange", () => {
+    resize();
+    requestDraw();
+  });
 }
 
 // ------------------------------------------------------------ boot
 
+/* --------------------------------------------------- canvas 取色
+ *
+ * canvas 的像素颜色不能用 CSS 变量，只能读出来再画。
+ * 每次绘制前读一遍，主题切换后重绘即可跟上。
+ */
+const colorCache = new Map();
+function themeColor(name, fallback) {
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return v || fallback;
+}
+function isLight() {
+  const forced = document.documentElement.dataset.theme;
+  if (forced === "light") return true;
+  if (forced === "dark") return false;
+  return window.matchMedia("(prefers-color-scheme: light)").matches;
+}
+/** 把 rgba() 里的 alpha 换掉，方便同一颜色在不同强度下复用 */
+function withAlpha(color, a) {
+  const c = color.trim();
+  if (c.startsWith("#")) {
+    const h = c.slice(1);
+    const n = h.length === 3 ? h.split("").map((x) => x + x).join("") : h;
+    const r = parseInt(n.slice(0, 2), 16);
+    const g = parseInt(n.slice(2, 4), 16);
+    const b = parseInt(n.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${a})`;
+  }
+  const m = c.match(/rgba?\(([^)]+)\)/);
+  if (m) {
+    const parts = m[1].split(",").map((x) => x.trim());
+    return `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, ${a})`;
+  }
+  return c;
+}
+
+/* --------------------------------------------------------------- 主题
+ *
+ * 三种状态：
+ *   没有 data-theme          → 跟随系统（CSS 媒体查询负责）
+ *   data-theme="light"       → 强制浅色
+ *   data-theme="dark"        → 强制深色
+ *
+ * 首屏的闪烁由 <head> 里的同步脚本消掉，这里只负责点击切换。
+ */
+const THEME_KEY = "theme";
+
+function applyTheme(mode) {
+  const root = document.documentElement;
+  if (mode === "light" || mode === "dark") {
+    root.dataset.theme = mode;
+  } else {
+    delete root.dataset.theme;
+  }
+  try {
+    if (mode === "light" || mode === "dark") localStorage.setItem(THEME_KEY, mode);
+    else localStorage.removeItem(THEME_KEY);
+  } catch {}
+  // canvas 无法用 CSS 变量，主题变了要通知绘图代码重画
+  window.dispatchEvent(new CustomEvent("themechange", { detail: { theme: mode } }));
+}
+
+/** 当前实际生效的主题（含跟随系统的情况） */
+function effectiveTheme() {
+  const forced = document.documentElement.dataset.theme;
+  if (forced === "light" || forced === "dark") return forced;
+  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+}
+
+function initThemeToggle() {
+  const btn = $("#theme-toggle");
+  if (btn) {
+    btn.addEventListener("click", () => {
+      applyTheme(effectiveTheme() === "light" ? "dark" : "light");
+    });
+  }
+  // 用户没手动选过时，系统偏好变化应实时生效
+  const mq = window.matchMedia("(prefers-color-scheme: light)");
+  const onChange = () => {
+    if (!document.documentElement.dataset.theme) {
+      window.dispatchEvent(new CustomEvent("themechange", { detail: { theme: effectiveTheme() } }));
+    }
+  };
+  if (mq.addEventListener) mq.addEventListener("change", onChange);
+  else if (mq.addListener) mq.addListener(onChange);
+}
+
 function boot() {
+  initThemeToggle();
   initSearchOverlay();
   if (page === "home") initHero();
   if (page === "graph") initGraphPage();
