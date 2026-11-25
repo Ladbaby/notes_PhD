@@ -702,9 +702,9 @@ function renderNote({ note, content, annHtml, toc, related, noteUrl, tagPages, v
       <h1 class="note-title">${esc(n.title)}</h1>
 
       ${
-        n.authors || n.firstAuthor
+        n.authors
           ? `<div class="note-byline">
-              <span class="authors">${esc(formatAuthors(n.authors || n.firstAuthor))}</span>
+              <span class="authors">${esc(formatAuthors(n.authors))}</span>
               ${metaLine ? `<span class="src">${esc(metaLine)}</span>` : ""}
             </div>`
           : ""

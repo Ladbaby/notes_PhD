@@ -111,8 +111,11 @@ for (const [rel, raw] of fileMap) {
     venueTag: venueTag || null,
     tags: topicTags,
     allTags: tags,
-    firstAuthor: data.FirstAuthor ? String(data.FirstAuthor).trim() : "",
-    authors: data.Author ? String(data.Author).trim() : "",
+    firstAuthor: cleanAuthor(data.FirstAuthor),
+    // Author 只含"除第一作者外"的其余作者，必须接在后面
+    authors: [cleanAuthor(data.FirstAuthor), cleanAuthor(data.Author)]
+      .filter(Boolean)
+      .join("; "),
     itemType: data.ItemType ? String(data.ItemType).trim() : "",
     conference: data.Conference ? String(data.Conference).trim() : "",
     journal: data.Journal ? String(data.Journal).trim() : "",
@@ -182,6 +185,14 @@ const withBody = uniqueNotes.filter((n) => n.hasBody).length;
 
 
 // ---------------------------------------------------------------- 图数据
+
+/** 作者字段里只有标点或空白的，一律视为空（Zotero 偶尔导出 ", " 这种） */
+function cleanAuthor(v) {
+  if (!v) return "";
+  const t = String(v).trim().replace(/^["']|["']$/g, "").trim();
+  if (!/[\p{L}]/u.test(t)) return "";
+  return t;
+}
 
 // 节点权重：正文越丰富、评分越高，节点越大
 function nodeWeight(n) {
