@@ -2120,7 +2120,7 @@ a.chip:hover {
 /* ------------------------------------------------------- katex */
 .katex {
   font-size: 1.02em;
-  color: #e8ecf8;
+  color: var(--text-bright);
 }
 .katex-display {
   margin: 1.4em 0;
@@ -2129,7 +2129,7 @@ a.chip:hover {
   padding: 6px 0;
 }
 .katex-display > .katex {
-  color: #e8ecf8;
+  color: var(--text-bright);
 }
 .math-error {
   color: var(--accent-rose);
